@@ -1,3 +1,6 @@
+pub use crate::canvas::Canvas;
+pub use crate::color;
+pub use crate::color::Color;
 pub use crate::point;
 pub use crate::point::Point;
 pub use crate::vector;

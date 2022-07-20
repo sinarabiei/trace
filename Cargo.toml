@@ -10,3 +10,7 @@ edition = "2021"
 [[example]]
 name = "projectile"
 path = "examples/projectile.rs"
+
+[[example]]
+name = "projectile_ppm"
+path = "examples/projectile_ppm.rs"
