@@ -9,7 +9,7 @@ pub struct Vector {
     pub z: f64,
 }
 
-/// Creates a Vector containing the arguments.
+/// Creates a `Vector` containing the arguments.
 ///
 /// # Examples
 ///

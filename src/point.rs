@@ -9,7 +9,7 @@ pub struct Point {
     pub z: f64,
 }
 
-/// Creates a Point containing the arguments.
+/// Creates a `Point` containing the arguments.
 ///
 /// # Examples
 ///

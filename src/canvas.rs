@@ -67,7 +67,7 @@ impl Canvas {
         ppm.push_str("255\n");
         for height in 0..self.height {
             let mut char_count = 0;
-        for width in 0..self.width {
+            for width in 0..self.width {
                 let pixel = self[(width, height)];
                 let red = (pixel.red * 255.0).ceil().clamp(0.0, 255.0).to_string();
                 let green = (pixel.green * 255.0).ceil().clamp(0.0, 255.0).to_string();
