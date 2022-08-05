@@ -1,8 +1,9 @@
 use crate::point::Point;
+use crate::prelude::is_equal;
 use crate::vector::Vector;
 
 /// Tuple
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Tuple {
     pub x: f64,
     pub y: f64,
@@ -32,6 +33,15 @@ impl Tuple {
             z: 0.0,
             w: 0.0,
         }
+    }
+}
+
+impl PartialEq for Tuple {
+    fn eq(&self, other: &Self) -> bool {
+        is_equal(self.x, other.x)
+            && is_equal(self.y, other.y)
+            && is_equal(self.z, other.z)
+            && is_equal(self.w, other.w)
     }
 }
 

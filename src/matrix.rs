@@ -131,7 +131,7 @@ impl Mat4 {
         mat
     }
 
-    /// #Example
+    /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
@@ -179,7 +179,7 @@ impl Mat4 {
         }
     }
 
-    /// #Example
+    /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
@@ -273,6 +273,223 @@ impl Mat4 {
         }
         mat
     }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// assert_eq!(
+    ///     Mat4::identity().translate(5, -3, 2) * Tuple::from(point![-3, 4, 5]),
+    ///    Tuple::from(point![2, 1, 7])
+    /// );
+    ///
+    /// // Multipying by the inverse of a translation matrix
+    /// assert_eq!(
+    ///     Mat4::identity().translate(5, -3, 2).inverse() * Tuple::from(point![-3, 4, 5]),
+    ///    Tuple::from(point![-8, 7, 3])
+    /// );
+    ///
+    /// // Translation does not affect vectors
+    /// assert_eq!(
+    ///     Mat4::identity().translate(5, -3, 2) * Tuple::from(vector![-3, 4, 5]),
+    ///    Tuple::from(vector![-3, 4, 5])
+    /// );
+    /// ```
+    pub fn translate<T, U, V>(self, x: T, y: U, z: V) -> Self
+    where
+        f64: From<T>,
+        f64: From<U>,
+        f64: From<V>,
+    {
+        let mut transform = Mat4::identity();
+        transform[(0, 3)] = f64::from(x);
+        transform[(1, 3)] = f64::from(y);
+        transform[(2, 3)] = f64::from(z);
+        transform * self
+    }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// // A scaling matrix applied to a point
+    /// assert_eq!(
+    ///     Mat4::identity().scale(2, 3, 4) * Tuple::from(point![-4, 6, 8]),
+    ///     Tuple::from(point![-8, 18, 32])
+    /// );
+    ///
+    /// // A scaling matrix applied to a vector
+    /// assert_eq!(
+    ///     Mat4::identity().scale(2, 3, 4) * Tuple::from(vector![-4, 6, 8]),
+    ///     Tuple::from(vector![-8, 18, 32])
+    /// );
+    ///
+    /// // Multiplying by the inverse of a scaling matrix
+    /// assert_eq!(
+    ///     Mat4::identity().scale(2, 3, 4).inverse() * Tuple::from(vector![-4, 6, 8]),
+    ///     Tuple::from(vector![-2, 2, 2])
+    /// );
+    ///
+    /// // Reflection is scaling by a negative value
+    /// assert_eq!(
+    ///     Mat4::identity().scale(-1, 1, 1) * Tuple::from(point![2, 3, 4]),
+    ///     Tuple::from(point![-2, 3, 4])
+    /// );
+    /// ```
+    pub fn scale<T, U, V>(self, x: T, y: U, z: V) -> Self
+    where
+        f64: From<T>,
+        f64: From<U>,
+        f64: From<V>,
+    {
+        let mut transform = Mat4::identity();
+        transform[(0, 0)] = f64::from(x);
+        transform[(1, 1)] = f64::from(y);
+        transform[(2, 2)] = f64::from(z);
+        transform * self
+    }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// # use core::f64::consts::{PI, SQRT_2};
+    /// assert_eq!(
+    ///     Mat4::identity().rotate_x(PI / 4.0) * Tuple::from(point![0, 1, 0]),
+    ///     Tuple::from(point![0, SQRT_2 / 2.0, SQRT_2 / 2.0])
+    /// );
+    /// assert_eq!(
+    ///     Mat4::identity().rotate_x(PI / 2.0) * Tuple::from(point![0, 1, 0]),
+    ///     Tuple::from(point![0, 0, 1])
+    /// );
+    ///
+    /// // The inverse of an x-rotation rotates in the opposite direction
+    /// assert_eq!(
+    ///     Mat4::identity().rotate_x(PI / 4.0).inverse() * Tuple::from(point![0, 1, 0]),
+    ///     Tuple::from(point![0, SQRT_2 / 2.0, -SQRT_2 / 2.0])
+    /// );
+    /// ```
+    pub fn rotate_x(self, rad: f64) -> Self {
+        let mut transform = Mat4::identity();
+        transform[(1, 1)] = rad.cos();
+        transform[(1, 2)] = -rad.sin();
+        transform[(2, 1)] = rad.sin();
+        transform[(2, 2)] = rad.cos();
+        transform * self
+    }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// # use core::f64::consts::{PI, SQRT_2};
+    /// assert_eq!(
+    ///     Mat4::identity().rotate_y(PI / 4.0) * Tuple::from(point![0, 0, 1]),
+    ///     Tuple::from(point![SQRT_2 / 2.0, 0, SQRT_2 / 2.0])
+    /// );
+    /// assert_eq!(
+    ///     Mat4::identity().rotate_y(PI / 2.0) * Tuple::from(point![0, 0, 1]),
+    ///     Tuple::from(point![1, 0, 0])
+    /// );
+    /// ```
+    pub fn rotate_y(self, rad: f64) -> Self {
+        let mut transform = Mat4::identity();
+        transform[(0, 0)] = rad.cos();
+        transform[(0, 2)] = rad.sin();
+        transform[(2, 0)] = -rad.sin();
+        transform[(2, 2)] = rad.cos();
+        transform * self
+    }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// # use core::f64::consts::{PI, SQRT_2};
+    /// assert_eq!(
+    ///     Mat4::identity().rotate_z(PI / 4.0) * Tuple::from(point![0, 1, 0]),
+    ///     Tuple::from(point![-SQRT_2 / 2.0, SQRT_2 / 2.0, 0])
+    /// );
+    /// assert_eq!(
+    ///     Mat4::identity().rotate_z(PI / 2.0) * Tuple::from(point![0, 1, 0]),
+    ///     Tuple::from(point![-1, 0, 0])
+    /// );
+    /// ```
+    pub fn rotate_z(self, rad: f64) -> Self {
+        let mut transform = Mat4::identity();
+        transform[(0, 0)] = rad.cos();
+        transform[(0, 1)] = -rad.sin();
+        transform[(1, 0)] = rad.sin();
+        transform[(1, 1)] = rad.cos();
+        transform * self
+    }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// // A shearing transformation moves x in proportion to y
+    /// assert_eq!(
+    ///     Mat4::identity().shear(1, 0, 0, 0, 0, 0) * Tuple::from(point![2, 3, 4]),
+    ///     Tuple::from(point![5, 3 ,4])
+    /// );
+    ///
+    /// // A shearing transformation moves x in proportion to z
+    /// assert_eq!(
+    ///     Mat4::identity().shear(0, 1, 0, 0, 0, 0) * Tuple::from(point![2, 3, 4]),
+    ///     Tuple::from(point![6, 3 ,4])
+    /// );
+    ///
+    /// // A shearing transformation moves y in proportion to x
+    /// assert_eq!(
+    ///     Mat4::identity().shear(0, 0, 1, 0, 0, 0) * Tuple::from(point![2, 3, 4]),
+    ///     Tuple::from(point![2, 5, 4])
+    /// );
+    ///
+    /// // A shearing transformation moves y in proportion to z
+    /// assert_eq!(
+    ///     Mat4::identity().shear(0, 0, 0, 1, 0, 0) * Tuple::from(point![2, 3, 4]),
+    ///     Tuple::from(point![2, 7 ,4])
+    /// );
+    ///
+    /// // A shearing transformation moves z in proportion to x
+    /// assert_eq!(
+    ///     Mat4::identity().shear(0, 0, 0, 0, 1, 0) * Tuple::from(point![2, 3, 4]),
+    ///     Tuple::from(point![2, 3, 6])
+    /// );
+    ///
+    /// // A shearing transformation moves z in proportion to y
+    /// assert_eq!(
+    ///     Mat4::identity().shear(0, 0, 0, 0, 0, 1) * Tuple::from(point![2, 3, 4]),
+    ///     Tuple::from(point![2, 3 ,7])
+    /// );
+    /// ```
+    pub fn shear<XY, XZ, YX, YZ, ZX, ZY>(
+        self,
+        x_y: XY,
+        x_z: XZ,
+        y_x: YX,
+        y_z: YZ,
+        z_x: ZX,
+        z_y: ZY,
+    ) -> Self
+    where
+        f64: From<XY>,
+        f64: From<XZ>,
+        f64: From<YX>,
+        f64: From<YZ>,
+        f64: From<ZX>,
+        f64: From<ZY>,
+    {
+        let mut transform = Mat4::identity();
+        transform[(0, 1)] = f64::from(x_y);
+        transform[(0, 2)] = f64::from(x_z);
+        transform[(1, 0)] = f64::from(y_x);
+        transform[(1, 2)] = f64::from(y_z);
+        transform[(2, 0)] = f64::from(z_x);
+        transform[(2, 1)] = f64::from(z_y);
+        transform * self
+    }
 }
 
 impl PartialEq for Mat4 {
@@ -307,7 +524,7 @@ impl From<&[f64]> for Mat4 {
     }
 }
 
-/// #Example
+/// # Examples
 ///
 /// ```
 /// # use trace::prelude::*;
@@ -348,7 +565,7 @@ impl IndexMut<(usize, usize)> for Mat4 {
     }
 }
 
-/// # Example
+/// # Examples
 ///
 /// ```
 /// # use trace::prelude::*;
@@ -511,7 +728,7 @@ impl Mat3 {
         }
     }
 
-    /// #Example
+    /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
@@ -545,7 +762,7 @@ impl Mat3 {
         mat
     }
 
-    /// #Example
+    /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
@@ -562,7 +779,7 @@ impl Mat3 {
         self.submatrix(row, col).determinant()
     }
 
-    /// #Example
+    /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
@@ -588,7 +805,7 @@ impl Mat3 {
         }
     }
 
-    /// #Example
+    /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
@@ -601,7 +818,6 @@ impl Mat3 {
     ///     -196.0
     /// ));
     /// ```
-
     pub fn determinant(&self) -> f64 {
         let mut det = 0.0;
         for col in 0..3 {
@@ -635,7 +851,7 @@ impl From<&[f64]> for Mat3 {
     }
 }
 
-/// #Example
+/// # Examples
 ///
 /// ```
 /// # use trace::prelude::*;
@@ -708,7 +924,7 @@ pub struct Mat2 {
 
 /// Creates a `Mat2` containing the arguments.
 ///
-/// # Example
+/// # Examples
 ///
 /// ```
 /// # use trace::prelude::*;
@@ -774,7 +990,7 @@ impl From<&[f64]> for Mat2 {
     }
 }
 
-/// #Example
+/// # Examples
 ///
 /// ```
 /// # use trace::prelude::*;
@@ -816,6 +1032,9 @@ impl IndexMut<(usize, usize)> for Mat2 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::point;
+    use crate::point::Point;
+    use core::f64::consts::PI;
 
     #[test]
     fn test_identity_inverse() {
@@ -845,5 +1064,17 @@ mod tests {
         // Inverse of the transpose of a matrix, is equal to
         // the transpose of the inverse of the same matrix.
         assert_eq!(mat.transpose().inverse(), mat.inverse().transpose());
+    }
+
+    #[test]
+    fn test_chain_transform() {
+        assert_eq!(
+            Mat4::identity()
+                .rotate_x(PI / 2.0)
+                .scale(5, 5, 5)
+                .translate(10, 5, 7)
+                * Tuple::from(point![1, 0, 1]),
+            Tuple::from(point![15, 0, 7])
+        );
     }
 }

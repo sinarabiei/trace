@@ -14,3 +14,7 @@ path = "examples/projectile.rs"
 [[example]]
 name = "projectile_ppm"
 path = "examples/projectile_ppm.rs"
+
+[[example]]
+name = "clock"
+path = "examples/clock.rs"
