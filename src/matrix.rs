@@ -1,5 +1,7 @@
+use crate::point::Point;
 use crate::prelude::is_equal;
 use crate::tuple::Tuple;
+use crate::vector::Vector;
 use std::ops::{Index, IndexMut, Mul};
 
 /// 4 by 4 matrix
@@ -150,7 +152,6 @@ impl Mat4 {
     /// );
     /// ```
     pub fn submatrix(&self, row: usize, col: usize) -> Mat3 {
-        let mut mat = Mat3::zero();
         let mut elements = Vec::new();
         for r in 0..4 {
             for c in 0..4 {
@@ -159,24 +160,43 @@ impl Mat4 {
                 }
             }
         }
-        for r in 0..3 {
-            for c in 0..3 {
-                mat[(r, c)] = elements[r * 3 + c];
-            }
-        }
-        mat
+        Mat3::from(&elements[..])
     }
 
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// assert!(is_equal(
+    ///     mat4![
+    ///         [-6, 1, 1, 6]
+    ///         [-8, 1, 2, 6]
+    ///         [-1, -5, 8, -4]
+    ///         [-7, 2, 6, 4]
+    ///     ].minor(0, 0),
+    ///     -196.0
+    /// ));
+    /// ```
     pub fn minor(&self, row: usize, col: usize) -> f64 {
         self.submatrix(row, col).determinant()
     }
 
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// assert!(is_equal(
+    ///     mat4![
+    ///         [-6, 1, 1, 6]
+    ///         [1, -8, 2, 6]
+    ///         [-5, -1, 8, -4]
+    ///         [2, -7, 6, 4]
+    ///     ].cofactor(0, 1),
+    ///     196.0
+    /// ));
+    /// ```
     pub fn cofactor(&self, row: usize, col: usize) -> f64 {
-        if (row + col) % 2 == 0 {
-            self.minor(row, col)
-        } else {
-            -self.minor(row, col)
-        }
+        (-1_i8).pow((row + col).try_into().unwrap()) as f64 * self.minor(row, col)
     }
 
     /// # Examples
@@ -664,6 +684,76 @@ impl Mul<Tuple> for Mat4 {
     }
 }
 
+/// # Examples
+///
+/// ```
+/// # use trace::prelude::*;
+/// let mat = mat4![
+///     [1, 2, 3, 4]
+///     [2, 4, 4, 2]
+///     [8, 6, 4, 1]
+///     [0, 0, 0, 1]
+/// ];
+/// let point = point![1, 2, 3];
+/// assert_eq!(mat * point, point![18, 24, 33]);
+/// ```
+impl Mul<Point> for Mat4 {
+    type Output = Point;
+
+    fn mul(self, rhs: Point) -> Self::Output {
+        let rhs = Tuple::from(rhs);
+        Point {
+            x: self[(0, 0)] * rhs.x
+                + self[(0, 1)] * rhs.y
+                + self[(0, 2)] * rhs.z
+                + self[(0, 3)] * rhs.w,
+            y: self[(1, 0)] * rhs.x
+                + self[(1, 1)] * rhs.y
+                + self[(1, 2)] * rhs.z
+                + self[(1, 3)] * rhs.w,
+            z: self[(2, 0)] * rhs.x
+                + self[(2, 1)] * rhs.y
+                + self[(2, 2)] * rhs.z
+                + self[(2, 3)] * rhs.w,
+        }
+    }
+}
+
+/// # Examples
+///
+/// ```
+/// # use trace::prelude::*;
+/// let mat = mat4![
+///     [1, 2, 3, 4]
+///     [2, 4, 4, 2]
+///     [8, 6, 4, 1]
+///     [0, 0, 0, 1]
+/// ];
+/// let vector = vector![1, 2, 3];
+/// assert_eq!(mat * vector, vector![14, 22, 32]);
+/// ```
+impl Mul<Vector> for Mat4 {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        let rhs = Tuple::from(rhs);
+        Vector {
+            x: self[(0, 0)] * rhs.x
+                + self[(0, 1)] * rhs.y
+                + self[(0, 2)] * rhs.z
+                + self[(0, 3)] * rhs.w,
+            y: self[(1, 0)] * rhs.x
+                + self[(1, 1)] * rhs.y
+                + self[(1, 2)] * rhs.z
+                + self[(1, 3)] * rhs.w,
+            z: self[(2, 0)] * rhs.x
+                + self[(2, 1)] * rhs.y
+                + self[(2, 2)] * rhs.z
+                + self[(2, 3)] * rhs.w,
+        }
+    }
+}
+
 /// 3 by 3 matrix
 ///
 /// # Examples
@@ -745,7 +835,6 @@ impl Mat3 {
     /// );
     /// ```
     pub fn submatrix(&self, row: usize, col: usize) -> Mat2 {
-        let mut mat = Mat2::zero();
         let mut elements = Vec::new();
         for r in 0..3 {
             for c in 0..3 {
@@ -754,12 +843,7 @@ impl Mat3 {
                 }
             }
         }
-        for r in 0..2 {
-            for c in 0..2 {
-                mat[(r, c)] = elements[r * 2 + c];
-            }
-        }
-        mat
+        Mat2::from(&elements[..])
     }
 
     /// # Examples
@@ -798,11 +882,7 @@ impl Mat3 {
     /// ));
     /// ```
     pub fn cofactor(&self, row: usize, col: usize) -> f64 {
-        if (row + col) % 2 == 0 {
-            self.minor(row, col)
-        } else {
-            -self.minor(row, col)
-        }
+        (-1_i8).pow((row + col).try_into().unwrap()) as f64 * self.minor(row, col)
     }
 
     /// # Examples

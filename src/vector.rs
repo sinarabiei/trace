@@ -74,10 +74,26 @@ impl Vector {
     /// assert_eq!(vector![1, 2, 3].normalize(), vector![0.26726, 0.53452, 0.80178]);
     ///
     /// // Magnitude of a normalized vector is 1.0
-    /// assert!(is_equal(vector![1, 2, 3].normalize().magnitude(), 1.0));
+    /// assert!(is_equal(
+    ///     vector![1, 2, 3].normalize().magnitude(),
+    ///     1.0
+    /// ));
+    ///
+    /// // Normalizing a zero magnitude vector is the zero vector
+    /// assert_eq!(
+    ///     vector![0, 0, 0].normalize(),
+    ///     vector![0, 0, 0]
+    /// );
     /// ```
     pub fn normalize(&self) -> Self {
         let magnitude = self.magnitude();
+        if is_equal(magnitude, 0.0) {
+            eprintln!(
+                "\x1b[1;33mwarning\x1b[0m: {}\n",
+                "normalizing zero magnitude vector"
+            );
+            return self.clone();
+        }
         Self {
             x: self.x / magnitude,
             y: self.y / magnitude,

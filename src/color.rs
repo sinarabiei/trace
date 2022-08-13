@@ -14,7 +14,10 @@ pub struct Color {
 ///
 /// ```
 /// # use trace::prelude::*;
-/// assert_eq!(color![-0.5, 0.4, 1.7], Color {red: -0.5, green: 0.4, blue: 1.7});
+/// assert_eq!(
+///     color![-0.5, 0.4, 1.7],
+///     Color {red: -0.5, green: 0.4, blue: 1.7}
+/// );
 /// ```
 #[macro_export]
 macro_rules! color {

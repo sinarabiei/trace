@@ -1,6 +1,4 @@
 use core::f64::consts::PI;
-use std::fs::File;
-use std::io::Write;
 use trace::prelude::*;
 
 fn main() -> Result<(), std::io::Error> {
@@ -14,7 +12,6 @@ fn main() -> Result<(), std::io::Error> {
         let y = (canvas.height as f64 / 2.0 - hour.y) as usize;
         canvas[(x, y)] = color![1, 1, 1];
     }
-    let mut file = File::create("clock.ppm")?;
-    file.write(&canvas.to_ppm().into_bytes())?;
+    canvas.write("clock.ppm")?;
     Ok(())
 }

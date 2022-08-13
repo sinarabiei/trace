@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use std::fs::File;
+use std::io::Write;
 use std::ops::{Index, IndexMut};
 
 pub struct Canvas {
@@ -17,9 +19,7 @@ impl Canvas {
             array: vec![color![0, 0, 0]; width * height],
         }
     }
-}
 
-impl Canvas {
     /// Returns a PPM-formatted string.
     ///
     /// # Examples
@@ -79,6 +79,12 @@ impl Canvas {
             ppm.push('\n');
         }
         ppm
+    }
+
+    /// Writes PPM-formatted string of canvas into `path`
+    pub fn write(&self, path: &str) -> Result<(), std::io::Error> {
+        File::create(path)?.write(self.to_ppm().as_bytes())?;
+        Ok(())
     }
 }
 

@@ -1,5 +1,3 @@
-use std::fs::File;
-use std::io::Write;
 use trace::prelude::*;
 
 struct Projectile {
@@ -54,7 +52,6 @@ fn main() -> Result<(), std::io::Error> {
         "It takes {} ticks for the projectile to hit the ground.\n",
         ticks_count - 1
     );
-    let mut file = File::create("projectile.ppm")?;
-    file.write(&canvas.to_ppm().into_bytes())?;
+    canvas.write("projectile.ppm")?;
     Ok(())
 }
