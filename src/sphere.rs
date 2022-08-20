@@ -1,15 +1,20 @@
 use crate::intersection::Intersection;
+use crate::material::Material;
 use crate::matrix::Mat4;
 use crate::point;
 use crate::point::Point;
 use crate::prelude::is_equal;
 use crate::ray::Ray;
+use crate::vector::Vector;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+/// `Sphere` instances are situated at the world's origin (0, 0, 0),
+/// and are all unit spheres, with radius of 1.
 #[derive(Debug, PartialEq)]
 pub struct Sphere {
     id: usize,
     pub transform: Mat4,
+    pub material: Material,
 }
 
 impl Sphere {
@@ -31,6 +36,7 @@ impl Sphere {
         Self {
             id: COUNTER.fetch_add(1, Ordering::Relaxed),
             transform: Mat4::identity(),
+            material: Material::new(),
         }
     }
 
@@ -151,5 +157,61 @@ impl Sphere {
                 },
             ]
         }
+    }
+
+    /// It assumes that the point will always
+    /// be on the surface of the sphere.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// # use std::f64::consts::PI;
+    /// # use std::f64::consts::SQRT_2;
+    /// // The normal on a sphere at a point on the x axis
+    /// let sphere = Sphere::new();
+    /// assert_eq!(sphere.normal_at(point![1, 0, 0]), vector![1, 0, 0]);
+    ///
+    /// // The normal on a sphere at a point on the y axis
+    /// let sphere = Sphere::new();
+    /// assert_eq!(sphere.normal_at(point![0, 1, 0]), vector![0, 1, 0]);
+    ///
+    /// // The normal on a sphere at a point on the z axis
+    /// let sphere = Sphere::new();
+    /// assert_eq!(sphere.normal_at(point![0, 0, 1]), vector![0, 0, 1]);
+    ///
+    /// // The normal on a sphere at a nonaxial point
+    /// let sphere = Sphere::new();
+    /// assert_eq!(
+    ///     sphere.normal_at(point![3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0]),
+    ///     vector![3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0]
+    /// );
+    ///
+    /// // The normal is a normalized vector
+    /// let sphere = Sphere::new();
+    /// let normal = sphere.normal_at(point![3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0, 3.0_f64.sqrt() / 3.0]);
+    /// assert_eq!(normal.normalize(), normal);
+    ///
+    /// // Computing the normal on a translated sphere
+    /// let mut sphere = Sphere::new();
+    /// sphere.transform = Mat4::identity().translate(0, 1, 0);
+    /// assert_eq!(
+    ///     sphere.normal_at(point![0, 1.70711, -0.70711]),
+    ///     vector![0, 0.70711, -0.70711]
+    /// );
+    ///
+    /// // Computing the normal on a transformed sphere
+    /// let mut sphere = Sphere::new();
+    /// sphere.transform = Mat4::identity().rotate_z(PI / 5.0).scale(1, 0.5, 1);
+    /// assert_eq!(
+    ///     sphere.normal_at(point![0, SQRT_2 / 2.0, -SQRT_2 / 2.0]),
+    ///     vector![0, 0.97014, -0.24254]
+    /// );
+    /// ```
+    pub fn normal_at(&self, point: Point) -> Vector {
+        let object_point = self.transform.inverse() * point;
+        let object_normal = object_point - Point::zero();
+        let normal = self.transform.inverse().transpose() * object_normal;
+        normal.normalize()
     }
 }

@@ -46,9 +46,7 @@ impl Vector {
             z: 0.0,
         }
     }
-}
 
-impl Vector {
     ///
     /// # Examples
     ///
@@ -128,6 +126,25 @@ impl Vector {
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x,
         }
+    }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// # use std::f64::consts::SQRT_2;
+    /// // Reflecting a vector approaching at 45 degrees
+    /// let vector = vector![1, -1, 0];
+    /// let normal = vector![0, 1, 0];
+    /// assert_eq!(vector.reflect(normal), vector![1, 1, 0]);
+    ///
+    /// // Reflecting a vector off a slanted surface
+    /// let vector = vector![0, -1, 0];
+    /// let normal = vector![SQRT_2 / 2.0, SQRT_2 / 2.0, 0];
+    /// assert_eq!(vector.reflect(normal), vector![1, 0, 0]);
+    /// ```
+    pub fn reflect(self, rhs: Self) -> Self {
+        self - rhs * 2 * self.dot(rhs)
     }
 }
 

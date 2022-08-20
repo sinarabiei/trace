@@ -2,9 +2,11 @@ pub use crate::canvas::Canvas;
 pub use crate::color;
 pub use crate::color::Color;
 pub use crate::intersection::Intersection;
+pub use crate::light::Light;
 pub use crate::mat2;
 pub use crate::mat3;
 pub use crate::mat4;
+pub use crate::material::Material;
 pub use crate::matrix::Mat2;
 pub use crate::matrix::Mat3;
 pub use crate::matrix::Mat4;
@@ -20,6 +22,6 @@ pub use crate::vector::Vector;
 pub const EPSILON: f64 = 0.00001;
 
 /// Float numbers comparison.
-pub fn is_equal(a: f64, b: f64) -> bool {
-    (a - b).abs() < EPSILON
+pub fn is_equal(lhs: f64, rhs: f64) -> bool {
+    (lhs - rhs).abs() < EPSILON
 }
