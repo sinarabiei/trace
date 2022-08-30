@@ -15,3 +15,7 @@
 ## Sphere
 
 ![Sphere](assets/sphere.png "Sphere")
+
+## World_Camera
+
+![World_Camera](assets/world_camera.png "World_Camera")

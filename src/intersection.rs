@@ -1,5 +1,8 @@
+use crate::point::Point;
 use crate::prelude::is_equal;
+use crate::ray::Ray;
 use crate::sphere::Sphere;
+use crate::vector::Vector;
 use std::cmp::Ordering;
 
 /// # Examples
@@ -138,4 +141,111 @@ impl Intersection<'_> {
             None => None,
         }
     }
+
+    // Prepares the state of an intersection
+    // to reuse in different calculations.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// let ray = Ray {
+    ///     origin: Point {
+    ///         x: 0.0,
+    ///         y: 0.0,
+    ///         z: -5.0,
+    ///     },
+    ///     direction: Vector {
+    ///         x: 0.0,
+    ///         y: 0.0,
+    ///         z: 1.0,
+    ///     },
+    /// };
+    /// let shape = Sphere::new();
+    /// let intersection = Intersection {
+    ///     t: 4.0,
+    ///     object: &shape,
+    /// };
+    /// let comps = intersection.prepare(ray);
+    /// assert!(is_equal(comps.t, intersection.t));
+    /// assert_eq!(*comps.object, *intersection.object);
+    /// assert_eq!(comps.point, point![0, 0, -1]);
+    /// assert_eq!(comps.eyev, vector![0, 0, -1]);
+    /// assert_eq!(comps.normal, vector![0, 0, -1]);
+    ///
+    /// // The hit, when an intersection occurs on the outside
+    /// let ray = Ray {
+    ///     origin: Point {
+    ///         x: 0.0,
+    ///         y: 0.0,
+    ///         z: -5.0,
+    ///     },
+    ///     direction: Vector {
+    ///         x: 0.0,
+    ///         y: 0.0,
+    ///         z: 1.0,
+    ///     },
+    /// };
+    /// let shape = Sphere::new();
+    /// let intersection = Intersection {
+    ///     t: 4.0,
+    ///     object: &shape,
+    /// };
+    /// let comps = intersection.prepare(ray);
+    /// assert_eq!(comps.inside, false);
+    ///
+    /// // The hit, when an intersection occurs on the inside
+    /// let ray = Ray {
+    ///     origin: Point {
+    ///         x: 0.0,
+    ///         y: 0.0,
+    ///         z: 0.0,
+    ///     },
+    ///     direction: Vector {
+    ///         x: 0.0,
+    ///         y: 0.0,
+    ///         z: 1.0,
+    ///     },
+    /// };
+    /// let shape = Sphere::new();
+    /// let intersection = Intersection {
+    ///     t: 1.0,
+    ///     object: &shape,
+    /// };
+    /// let comps = intersection.prepare(ray);
+    /// assert_eq!(comps.point, point![0, 0, 1]);
+    /// assert_eq!(comps.eyev, vector![0, 0, -1]);
+    /// assert_eq!(comps.inside, true);
+    /// // normal would have been (0, 0, 1), but is inverted!
+    /// assert_eq!(comps.normal, vector![0, 0, -1]);
+    /// ```
+    pub fn prepare(&self, ray: Ray) -> Computation {
+        let t = self.t;
+        let object = self.object;
+        let point = ray.position(t);
+        let eyev = -ray.direction;
+        let mut normal = self.object.normal_at(point);
+        let mut inside = false;
+        if normal.dot(eyev) < 0.0 {
+            inside = true;
+            normal = -normal;
+        }
+        Computation {
+            t,
+            object,
+            point,
+            eyev,
+            normal,
+            inside,
+        }
+    }
+}
+
+pub struct Computation<'a> {
+    pub t: f64,
+    pub object: &'a Sphere,
+    pub point: Point,
+    pub eyev: Vector,
+    pub normal: Vector,
+    pub inside: bool,
 }

@@ -510,6 +510,53 @@ impl Mat4 {
         transform[(2, 1)] = f64::from(z_y);
         transform * self
     }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// // The transformation matrix for the default orientation
+    /// assert_eq!(
+    ///     Mat4::identity().view_transform(point![0, 0, 0], point![0, 0, -1], vector![0, 1, 0]),
+    ///     Mat4::identity()
+    /// );
+    ///
+    /// // A view transformation matrix looking in positive z direction
+    /// assert_eq!(
+    ///     Mat4::identity().view_transform(point![0, 0, 0], point![0, 0, 1], vector![0, 1, 0]),
+    ///     Mat4::identity().scale(-1, 1, -1)
+    /// );
+    ///
+    /// // The view transformation moves the world
+    /// assert_eq!(
+    ///     Mat4::identity().view_transform(point![0, 0, 8], point![0, 0, 0], vector![0, 1, 0]),
+    ///     Mat4::identity().translate(0, 0, -8)
+    /// );
+    ///
+    /// // An arbitrary view transformation
+    /// assert_eq!(
+    ///     Mat4::identity().view_transform(point![1, 3, 2], point![4, -2, 8], vector![1, 1, 0]),
+    ///     mat4![
+    ///         [-0.50709, 0.50709, 0.67612, -2.36643]
+    ///         [0.76772, 0.60609, 0.12122, -2.82843]
+    ///         [-0.35857, 0.59761, -0.71714, 0.00000]
+    ///         [0.00000, 0.00000, 0.00000, 1.00000]
+    ///     ]
+    /// );
+    /// ```
+    pub fn view_transform(self, from: Point, to: Point, up: Vector) -> Mat4 {
+        let forward = (to - from).normalize();
+        let up_normalized = up.normalize();
+        let left = forward.cross(up_normalized);
+        let true_up = left.cross(forward);
+        let orientation = mat4![
+            [left.x, left.y, left.z, 0]
+            [true_up.x, true_up.y, true_up.z, 0]
+            [-forward.x, -forward.y, -forward.z, 0]
+            [0, 0, 0, 1]
+        ];
+        orientation * Mat4::identity().translate(-from.x, -from.y, -from.z)
+    }
 }
 
 impl PartialEq for Mat4 {

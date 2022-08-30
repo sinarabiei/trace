@@ -1,3 +1,4 @@
+pub use crate::camera::Camera;
 pub use crate::canvas::Canvas;
 pub use crate::color;
 pub use crate::color::Color;
@@ -18,6 +19,7 @@ pub use crate::tuple;
 pub use crate::tuple::Tuple;
 pub use crate::vector;
 pub use crate::vector::Vector;
+pub use crate::world::World;
 
 pub const EPSILON: f64 = 0.00001;
 
