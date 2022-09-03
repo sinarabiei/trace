@@ -39,8 +39,9 @@ impl Material {
     ///     position: point![0, 0, -10],
     ///     intensity: color![1, 1, 1],
     /// };
+    /// let in_shadow = false;
     /// assert_eq!(
-    ///     material.lighting(light, position, eye, normal),
+    ///     material.lighting(light, position, eye, normal, in_shadow),
     ///     color![1.9, 1.9, 1.9]
     /// );
     ///
@@ -53,8 +54,9 @@ impl Material {
     ///     position: point![0, 0, -10],
     ///     intensity: color![1, 1, 1],
     /// };
+    /// let in_shadow = false;
     /// assert_eq!(
-    ///     material.lighting(light, position, eye, normal),
+    ///     material.lighting(light, position, eye, normal, in_shadow),
     ///     color![1, 1, 1]
     /// );
     ///
@@ -67,8 +69,9 @@ impl Material {
     ///     position: point![0, 10, -10],
     ///     intensity: color![1, 1, 1],
     /// };
+    /// let in_shadow = false;
     /// assert_eq!(
-    ///     material.lighting(light, position, eye, normal),
+    ///     material.lighting(light, position, eye, normal, in_shadow),
     ///     color![0.7364, 0.7364, 0.7364]
     /// );
     ///
@@ -81,8 +84,9 @@ impl Material {
     ///     position: point![0, 10, -10],
     ///     intensity: color![1, 1, 1],
     /// };
+    /// let in_shadow = false;
     /// assert_eq!(
-    ///     material.lighting(light, position, eye, normal),
+    ///     material.lighting(light, position, eye, normal, in_shadow),
     ///     color![1.6364, 1.6364, 1.6364]
     /// );
     ///
@@ -95,19 +99,41 @@ impl Material {
     ///     position: point![0, 0, 10],
     ///     intensity: color![1, 1, 1],
     /// };
+    /// let in_shadow = false;
     /// assert_eq!(
-    ///     material.lighting(light, position, eye, normal),
+    ///     material.lighting(light, position, eye, normal, in_shadow),
+    ///     color![0.1, 0.1, 0.1]
+    /// );
+    ///
+    /// // Lighting with the surface in shadow
+    /// let material = Material::new();
+    /// let eyev = vector![0, 0, -1];
+    /// let normalv = vector![0, 0, -1];
+    /// let light = Light {
+    ///     position: point![0, 0, -10],
+    ///     intensity: color![1, 1, 1],
+    /// };
+    /// let in_shadow = true;
+    /// assert_eq!(
+    ///     material.lighting(light, position, eyev, normalv, in_shadow),
     ///     color![0.1, 0.1, 0.1]
     /// );
     /// ```
-    pub fn lighting(&self, light: Light, point: Point, eye: Vector, normal: Vector) -> Color {
+    pub fn lighting(
+        &self,
+        light: Light,
+        point: Point,
+        eye: Vector,
+        normal: Vector,
+        in_shadow: bool,
+    ) -> Color {
         let effective_color = self.color * light.intensity;
         let light_vector = (light.position - point).normalize();
         let ambient = effective_color * self.ambient;
         let light_dot_normal = light_vector.dot(normal);
         let diffuse: Color;
         let specular: Color;
-        if light_dot_normal < 0.0 {
+        if light_dot_normal < 0.0 || in_shadow {
             diffuse = color![0, 0, 0];
             specular = color![0, 0, 0];
         } else {

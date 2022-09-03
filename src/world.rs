@@ -106,6 +106,48 @@ impl World {
     ///
     /// ```
     /// # use trace::prelude::*;
+    /// // There is no shadow when nothing is collinear with point and light
+    /// let world = World::new();
+    /// let point = point![0, 10, 0];
+    /// assert_eq!(world.is_shadowed(point), false);
+    ///
+    /// // The shadow when an object is between the point and the light
+    /// let world = World::new();
+    /// let point = point![10, -10, 10];
+    /// assert_eq!(world.is_shadowed(point), true);
+    ///
+    /// // There is no shadow when an object is behind the light
+    /// let world = World::new();
+    /// let point = point![-20, 20, -20];
+    /// assert_eq!(world.is_shadowed(point), false);
+    ///
+    /// // There is no shadow when an object is behind the point
+    /// let world = World::new();
+    /// let point = point![-2, 2, -2];
+    /// assert_eq!(world.is_shadowed(point), false);
+    /// ```
+    pub fn is_shadowed(&self, point: Point) -> bool {
+        let point_to_light = self.light.position - point;
+        let distance = point_to_light.magnitude();
+        let direction = point_to_light.normalize();
+        let ray = Ray {
+            origin: point,
+            direction,
+        };
+        let intersections = self.intersect(ray);
+        let hit = Intersection::hit(&intersections);
+        if let Some(hit) = hit {
+            if hit.t < distance {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
     /// // Shading an intersection
     /// let world = World::new();
     /// let ray = Ray {
@@ -137,12 +179,38 @@ impl World {
     /// };
     /// let comps = intersection.prepare(ray);
     /// assert_eq!(world.shade_hit(comps), color![0.90498, 0.90498, 0.90498]);
+    ///
+    /// // shade_hit() is given an intersection in shadow
+    /// let mut world = World::new();
+    /// world.light = Light {
+    ///     position: point![0, 0, -10],
+    ///     intensity: color![1, 1, 1],
+    /// };
+    /// let sphere_one = Sphere::new();
+    /// world.objects.push(sphere_one);
+    /// let mut sphere_two = Sphere::new();
+    /// sphere_two.transform = Mat4::identity().translate(0, 0, 10);
+    /// world.objects.push(sphere_two);
+    /// let ray = Ray {
+    ///     origin: point![0, 0, 5],
+    ///     direction: vector![0, 0, 1],
+    /// };
+    /// let intersection = Intersection {
+    ///     t: 4.0,
+    ///     object: &world.objects[1],
+    /// };
+    /// let comps = intersection.prepare(ray);
+    /// assert_eq!(world.shade_hit(comps), color![0.1, 0.1, 0.1]);
     /// ```
     pub fn shade_hit(&self, comps: Computation) -> Color {
-        comps
-            .object
-            .material
-            .lighting(self.light, comps.point, comps.eyev, comps.normal)
+        let shadowed = self.is_shadowed(comps.over_point);
+        comps.object.material.lighting(
+            self.light,
+            comps.over_point,
+            comps.eyev,
+            comps.normal,
+            shadowed,
+        )
     }
 
     /// # Examples

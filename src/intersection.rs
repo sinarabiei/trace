@@ -1,5 +1,6 @@
 use crate::point::Point;
 use crate::prelude::is_equal;
+use crate::prelude::EPSILON;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::vector::Vector;
@@ -142,8 +143,8 @@ impl Intersection<'_> {
         }
     }
 
-    // Prepares the state of an intersection
-    // to reuse in different calculations.
+    /// Prepares the state of an intersection
+    /// to reuse in different calculations.
     ///
     /// # Examples
     ///
@@ -218,6 +219,21 @@ impl Intersection<'_> {
     /// assert_eq!(comps.inside, true);
     /// // normal would have been (0, 0, 1), but is inverted!
     /// assert_eq!(comps.normal, vector![0, 0, -1]);
+    ///
+    /// // The hit should offset the point
+    /// let ray = Ray {
+    ///     origin: point![0, 0, -5],
+    ///     direction: vector![0, 0, 1],
+    /// };
+    /// let mut shape = Sphere::new();
+    /// shape.transform = Mat4::identity().translate(0, 0, 1);
+    /// let intersection = Intersection {
+    ///     t: 5.0,
+    ///     object: &shape,
+    /// };
+    /// let comps = intersection.prepare(ray);
+    /// assert!(comps.over_point.z < -EPSILON / 2.0);
+    /// assert!(comps.point.z > comps.over_point.z);
     /// ```
     pub fn prepare(&self, ray: Ray) -> Computation {
         let t = self.t;
@@ -230,10 +246,12 @@ impl Intersection<'_> {
             inside = true;
             normal = -normal;
         }
+        let over_point = point + normal * EPSILON;
         Computation {
             t,
             object,
             point,
+            over_point,
             eyev,
             normal,
             inside,
@@ -245,6 +263,7 @@ pub struct Computation<'a> {
     pub t: f64,
     pub object: &'a Sphere,
     pub point: Point,
+    pub over_point: Point,
     pub eyev: Vector,
     pub normal: Vector,
     pub inside: bool,

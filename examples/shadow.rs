@@ -71,6 +71,6 @@ fn main() -> Result<(), std::io::Error> {
     // Canvas
     let canvas = camera.render(&world);
 
-    canvas.write("world_camera.ppm")?;
+    canvas.write("shadow.ppm")?;
     Ok(())
 }
