@@ -11,15 +11,20 @@ pub use crate::material::Material;
 pub use crate::matrix::Mat2;
 pub use crate::matrix::Mat3;
 pub use crate::matrix::Mat4;
+pub use crate::plane::Plane;
 pub use crate::point;
 pub use crate::point::Point;
 pub use crate::ray::Ray;
+pub use crate::shape::Shape;
 pub use crate::sphere::Sphere;
 pub use crate::tuple;
 pub use crate::tuple::Tuple;
 pub use crate::vector;
 pub use crate::vector::Vector;
 pub use crate::world::World;
+use std::sync::atomic::AtomicUsize;
+
+pub static OBJECT_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 pub const EPSILON: f64 = 0.00001;
 

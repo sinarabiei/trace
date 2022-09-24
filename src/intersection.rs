@@ -2,35 +2,37 @@ use crate::point::Point;
 use crate::prelude::is_equal;
 use crate::prelude::EPSILON;
 use crate::ray::Ray;
-use crate::sphere::Sphere;
+use crate::shape::Shape;
 use crate::vector::Vector;
 use std::cmp::Ordering;
+use std::rc::Rc;
 
 /// # Examples
 ///
 /// ```
 /// # use trace::prelude::*;
+/// # use std::rc::Rc;
 /// let sphere = Sphere::new();
 /// let intersection = Intersection {
 ///     t: 3.5,
-///     object: &sphere,
+///     object: Rc::new(sphere),
 /// };
 /// assert!(is_equal(intersection.t, 3.5));
-/// assert_eq!(*intersection.object, sphere);
+/// // assert_eq!(intersection.object, Rc::new(sphere));
 /// ```
 #[derive(Debug, Clone)]
-pub struct Intersection<'a> {
+pub struct Intersection {
     pub t: f64,
-    pub object: &'a Sphere,
+    pub object: Rc<dyn Shape>,
 }
 
-impl PartialEq for Intersection<'_> {
+impl PartialEq for Intersection {
     fn eq(&self, other: &Self) -> bool {
-        is_equal(self.t, other.t) && self.object == other.object
+        is_equal(self.t, other.t) && self.object == other.object.clone()
     }
 }
 
-impl PartialOrd for Intersection<'_> {
+impl PartialOrd for Intersection {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.t < other.t {
             Some(Ordering::Less)
@@ -42,21 +44,22 @@ impl PartialOrd for Intersection<'_> {
     }
 }
 
-impl Intersection<'_> {
+impl Intersection {
     /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
+    /// # use std::rc::Rc;
     /// // The hit, when all intersections have positive `t`
-    /// let sphere = Sphere::new();
+    /// let sphere = Rc::new(Sphere::new());
     /// let mut intersections = vec![
     ///     Intersection {
     ///         t: 1.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     ///     Intersection {
     ///         t: 2.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     /// ];
     /// intersections.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -64,20 +67,20 @@ impl Intersection<'_> {
     ///     Intersection::hit(&intersections),
     ///     Some(Intersection {
     ///         t: 1.0,
-    ///         object: &sphere
+    ///         object: sphere.clone(),
     ///     })
     /// );
     ///
     /// // The hit, when some intersections have negative `t`
-    /// let sphere = Sphere::new();
+    /// let sphere = Rc::new(Sphere::new());
     /// let mut intersections = vec![
     ///     Intersection {
     ///         t: -1.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     ///     Intersection {
     ///         t: 1.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     /// ];
     /// intersections.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -85,43 +88,43 @@ impl Intersection<'_> {
     ///     Intersection::hit(&intersections),
     ///     Some(Intersection {
     ///         t: 1.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     })
     /// );
     ///
     /// // The hit, when all intersections have negative `t`
-    /// let sphere = Sphere::new();
+    /// let sphere = Rc::new(Sphere::new());
     /// let mut intersections = vec![
     ///     Intersection {
     ///         t: -2.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     ///     Intersection {
     ///         t: -1.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     /// ];
     /// intersections.sort_by(|a, b| a.partial_cmp(b).unwrap());
     /// assert_eq!(Intersection::hit(&intersections), None);
     ///
     /// // The hit is always the lowest nonnegative intersection
-    /// let sphere = Sphere::new();
+    /// let sphere = Rc::new(Sphere::new());
     /// let mut intersections = vec![
     ///     Intersection {
     ///         t: 5.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     ///     Intersection {
     ///         t: 7.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     ///     Intersection {
     ///         t: -3.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     ///     Intersection {
     ///         t: -2.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     },
     /// ];
     /// intersections.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -129,11 +132,11 @@ impl Intersection<'_> {
     ///     Intersection::hit(&intersections),
     ///     Some(Intersection {
     ///         t: 5.0,
-    ///         object: &sphere,
+    ///         object: sphere.clone(),
     ///     })
     /// );
     /// ```
-    pub fn hit<'a>(intersections: &'a [Intersection]) -> Option<Intersection<'a>> {
+    pub fn hit<'a>(intersections: &'a [Intersection]) -> Option<Intersection> {
         match intersections
             .iter()
             .find(|&intersection| intersection.t > 0.0 || is_equal(intersection.t, 0.0))
@@ -150,6 +153,7 @@ impl Intersection<'_> {
     ///
     /// ```
     /// # use trace::prelude::*;
+    /// # use std::rc::Rc;
     /// let ray = Ray {
     ///     origin: Point {
     ///         x: 0.0,
@@ -165,7 +169,7 @@ impl Intersection<'_> {
     /// let shape = Sphere::new();
     /// let intersection = Intersection {
     ///     t: 4.0,
-    ///     object: &shape,
+    ///     object: Rc::new(shape),
     /// };
     /// let comps = intersection.prepare(ray);
     /// assert!(is_equal(comps.t, intersection.t));
@@ -190,7 +194,7 @@ impl Intersection<'_> {
     /// let shape = Sphere::new();
     /// let intersection = Intersection {
     ///     t: 4.0,
-    ///     object: &shape,
+    ///     object: Rc::new(shape),
     /// };
     /// let comps = intersection.prepare(ray);
     /// assert_eq!(comps.inside, false);
@@ -211,7 +215,7 @@ impl Intersection<'_> {
     /// let shape = Sphere::new();
     /// let intersection = Intersection {
     ///     t: 1.0,
-    ///     object: &shape,
+    ///     object: Rc::new(shape),
     /// };
     /// let comps = intersection.prepare(ray);
     /// assert_eq!(comps.point, point![0, 0, 1]);
@@ -229,7 +233,7 @@ impl Intersection<'_> {
     /// shape.transform = Mat4::identity().translate(0, 0, 1);
     /// let intersection = Intersection {
     ///     t: 5.0,
-    ///     object: &shape,
+    ///     object: Rc::new(shape),
     /// };
     /// let comps = intersection.prepare(ray);
     /// assert!(comps.over_point.z < -EPSILON / 2.0);
@@ -237,7 +241,7 @@ impl Intersection<'_> {
     /// ```
     pub fn prepare(&self, ray: Ray) -> Computation {
         let t = self.t;
-        let object = self.object;
+        let object = self.object.clone();
         let point = ray.position(t);
         let eyev = -ray.direction;
         let mut normal = self.object.normal_at(point);
@@ -259,9 +263,9 @@ impl Intersection<'_> {
     }
 }
 
-pub struct Computation<'a> {
+pub struct Computation {
     pub t: f64,
-    pub object: &'a Sphere,
+    pub object: Rc<dyn Shape>,
     pub point: Point,
     pub over_point: Point,
     pub eyev: Vector,

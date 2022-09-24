@@ -5,46 +5,16 @@ use crate::light::Light;
 use crate::matrix::Mat4;
 use crate::point::Point;
 use crate::ray::Ray;
+use crate::shape::Shape;
 use crate::sphere::Sphere;
+use std::rc::Rc;
 
 pub struct World {
     pub light: Light,
-    pub objects: Vec<Sphere>,
+    pub objects: Vec<Rc<dyn Shape>>,
 }
 
 impl World {
-    /// # Examples
-    ///
-    /// ```
-    /// # use trace::prelude::*;
-    /// let light = Light {
-    ///     position: Point {
-    ///         x: -10.0,
-    ///         y: 10.0,
-    ///         z: -10.0,
-    ///     },
-    ///     intensity: Color {
-    ///         red: 1.0,
-    ///         green: 1.0,
-    ///         blue: 1.0,
-    ///     },
-    /// };
-    /// let mut sphere_outer = Sphere::new();
-    /// let mut sphere_inner = Sphere::new();
-    /// sphere_outer.material.color = Color {
-    ///     red: 0.8,
-    ///     green: 1.0,
-    ///     blue: 0.6,
-    /// };
-    /// sphere_outer.material.diffuse = 0.7;
-    /// sphere_outer.material.specular = 0.2;
-    /// sphere_inner.transform = Mat4::identity().scale(0.5, 0.5, 0.5);
-    /// let world = World::new();
-    /// assert_eq!(world.light, light);
-    /// // This two do not pass, because each sphere has a unique id.
-    /// // assert!(world.objects.contains(&sphere_outer));
-    /// // assert!(world.objects.contains(&sphere_inner));
-    /// ```
     pub fn new() -> Self {
         let light = Light {
             position: Point {
@@ -71,7 +41,7 @@ impl World {
 
         Self {
             light,
-            objects: vec![sphere_outer, sphere_inner],
+            objects: vec![Rc::new(sphere_outer), Rc::new(sphere_inner)],
         }
     }
 
@@ -79,6 +49,7 @@ impl World {
     /// Returned vector of intersections is sorted.
     ///
     /// # Examples
+    ///
     /// ```
     /// # use trace::prelude::*;
     /// let world = World::new();
@@ -148,18 +119,19 @@ impl World {
     ///
     /// ```
     /// # use trace::prelude::*;
+    /// # use std::rc::Rc;
     /// // Shading an intersection
     /// let world = World::new();
     /// let ray = Ray {
     ///     origin: point![0, 0, -5],
     ///     direction: vector![0, 0, 1],
     /// };
-    /// let shape = &world.objects[0];
+    /// let shape = world.objects[0].clone();
     /// let intersection = Intersection {
     ///     t: 4.0,
     ///     object: shape,
     /// };
-    /// let comps = intersection.prepare(ray);
+    /// let mut comps = intersection.prepare(ray);
     /// assert_eq!(world.shade_hit(comps), color![0.38066, 0.47583, 0.2855]);
     ///
     /// // Shading an intersection from the inside
@@ -175,7 +147,7 @@ impl World {
     /// let shape = &world.objects[1];
     /// let intersection = Intersection {
     ///     t: 0.5,
-    ///     object: shape,
+    ///     object: shape.clone(),
     /// };
     /// let comps = intersection.prepare(ray);
     /// assert_eq!(world.shade_hit(comps), color![0.90498, 0.90498, 0.90498]);
@@ -186,10 +158,10 @@ impl World {
     ///     position: point![0, 0, -10],
     ///     intensity: color![1, 1, 1],
     /// };
-    /// let sphere_one = Sphere::new();
+    /// let sphere_one = Rc::new(Sphere::new());
     /// world.objects.push(sphere_one);
-    /// let mut sphere_two = Sphere::new();
-    /// sphere_two.transform = Mat4::identity().translate(0, 0, 10);
+    /// let mut sphere_two = Rc::new(Sphere::new());
+    /// Rc::get_mut(&mut sphere_two).unwrap().transform = Mat4::identity().translate(0, 0, 10);
     /// world.objects.push(sphere_two);
     /// let ray = Ray {
     ///     origin: point![0, 0, 5],
@@ -197,14 +169,14 @@ impl World {
     /// };
     /// let intersection = Intersection {
     ///     t: 4.0,
-    ///     object: &world.objects[1],
+    ///     object: world.objects[1].clone(),
     /// };
     /// let comps = intersection.prepare(ray);
     /// assert_eq!(world.shade_hit(comps), color![0.1, 0.1, 0.1]);
     /// ```
     pub fn shade_hit(&self, comps: Computation) -> Color {
         let shadowed = self.is_shadowed(comps.over_point);
-        comps.object.material.lighting(
+        comps.object.material().lighting(
             self.light,
             comps.over_point,
             comps.eyev,
@@ -217,6 +189,7 @@ impl World {
     ///
     /// ```
     /// # use trace::prelude::*;
+    /// # use std::rc::Rc;
     /// // The color when a ray misses
     /// let world = World::new();
     /// let ray = Ray {
@@ -235,15 +208,15 @@ impl World {
     ///
     /// // The color with an intersection behind the ray
     /// let mut world = World::new();
-    /// world.objects[0].material.ambient = 1.0;
-    /// world.objects[1].material.ambient = 1.0;
-    /// let outer = &world.objects[0];
-    /// let inner = &world.objects[1];
+    /// Rc::get_mut(&mut world.objects[0]).unwrap().material_mut().ambient = 1.0;
+    /// Rc::get_mut(&mut world.objects[1]).unwrap().material_mut().ambient = 1.0;
+    /// let outer = world.objects[0].clone();
+    /// let inner = world.objects[1].clone();
     /// let ray = Ray {
     ///     origin: point![0, 0, 0.75],
     ///     direction: vector![0, 0, -1],
     /// };
-    /// assert_eq!(world.color_at(ray), inner.material.color);
+    /// assert_eq!(world.color_at(ray), inner.material().color);
     /// ```
     pub fn color_at(&self, ray: Ray) -> Color {
         let intersections = self.intersect(ray);

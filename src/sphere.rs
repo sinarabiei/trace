@@ -4,15 +4,18 @@ use crate::matrix::Mat4;
 use crate::point;
 use crate::point::Point;
 use crate::prelude::is_equal;
+use crate::prelude::OBJECT_COUNTER;
 use crate::ray::Ray;
+use crate::shape::Shape;
 use crate::vector::Vector;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::rc::Rc;
+use std::sync::atomic::Ordering;
 
 /// `Sphere` instances are situated at the world's origin (0, 0, 0),
 /// and are all unit spheres, with radius of 1.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
-    id: usize,
+    pub id: usize,
     pub transform: Mat4,
     pub material: Material,
 }
@@ -32,18 +35,23 @@ impl Sphere {
     /// assert_eq!(sphere.transform, Mat4::identity().translate(2, 3, 4));
     /// ```
     pub fn new() -> Sphere {
-        static COUNTER: AtomicUsize = AtomicUsize::new(0);
         Self {
-            id: COUNTER.fetch_add(1, Ordering::Relaxed),
+            id: OBJECT_COUNTER.fetch_add(1, Ordering::Relaxed),
             transform: Mat4::identity(),
             material: Material::new(),
         }
     }
+}
 
+// TODO
+// impl Default for Sphere {}
+
+impl Shape for Sphere {
     /// # Examples
     ///
     /// ```
     /// # use trace::prelude::*;
+    /// # use std::rc::Rc;
     /// // A ray intersects a sphere at two points
     /// let ray = Ray {
     ///     origin: point![0, 0, -5],
@@ -101,19 +109,19 @@ impl Sphere {
     ///     origin: point![0, 0, -5],
     ///     direction: vector![0, 0, 1],
     /// };
-    /// let sphere = Sphere::new();
+    /// let sphere = Rc::new(Sphere::new());
     /// let intersections = sphere.intersect(ray);
     /// assert_eq!(intersections.len(), 2);
-    /// assert_eq!(*intersections[0].object, sphere);
-    /// assert_eq!(*intersections[1].object, sphere);
+    /// // assert_eq!(*intersections[0].object, *sphere);
+    /// // assert_eq!(*intersections[1].object, *sphere);
     ///
     /// // Intersecting a scaled sphere with a ray
     /// let ray = Ray {
     ///     origin: point![0, 0, -5],
     ///     direction: vector![0, 0, 1],
     /// };
-    /// let mut sphere = Sphere::new();
-    /// sphere.transform = Mat4::identity().scale(2, 2, 2);
+    /// let mut sphere = Rc::new(Sphere::new());
+    /// Rc::get_mut(&mut sphere).unwrap().transform = Mat4::identity().scale(2, 2, 2);
     /// let intersections = sphere.intersect(ray);
     /// assert_eq!(intersections.len(), 2);
     /// assert!(is_equal(intersections[0].t, 3.0));
@@ -129,13 +137,12 @@ impl Sphere {
     /// let intersections = sphere.intersect(ray);
     /// assert_eq!(intersections.len(), 0);
     /// ```
-    pub fn intersect(&self, ray: Ray) -> Vec<Intersection> {
+    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         // the vector from the sphere's center, to the ray origin
         // remember: the sphere is centered at the world origin
-        let ray = ray.transform(self.transform.inverse());
-        let sphere_to_ray = ray.origin - point![0, 0, 0];
-        let a = ray.direction.dot(ray.direction);
-        let b = 2.0 * ray.direction.dot(sphere_to_ray);
+        let sphere_to_ray = local_ray.origin - point![0, 0, 0];
+        let a = local_ray.direction.dot(local_ray.direction);
+        let b = 2.0 * local_ray.direction.dot(sphere_to_ray);
         let c = sphere_to_ray.dot(sphere_to_ray) - 1.0;
         let discriminant = b.powi(2) - 4.0 * a * c;
         if discriminant < 0.0 {
@@ -143,17 +150,17 @@ impl Sphere {
         } else if is_equal(discriminant, 0.0) {
             vec![Intersection {
                 t: (-b - discriminant.sqrt()) / (2.0 * a),
-                object: self,
+                object: Rc::new(self.clone()),
             }]
         } else {
             vec![
                 Intersection {
                     t: (-b - discriminant.sqrt()) / (2.0 * a),
-                    object: self,
+                    object: Rc::new(self.clone()),
                 },
                 Intersection {
                     t: (-b + discriminant.sqrt()) / (2.0 * a),
-                    object: self,
+                    object: Rc::new(self.clone()),
                 },
             ]
         }
@@ -208,10 +215,27 @@ impl Sphere {
     ///     vector![0, 0.97014, -0.24254]
     /// );
     /// ```
-    pub fn normal_at(&self, point: Point) -> Vector {
-        let object_point = self.transform.inverse() * point;
-        let object_normal = object_point - Point::zero();
-        let normal = self.transform.inverse().transpose() * object_normal;
-        normal.normalize()
+    fn local_normal_at(&self, local_point: Point) -> Vector {
+        local_point - Point::zero()
+    }
+
+    fn transform(&self) -> &Mat4 {
+        &self.transform
+    }
+
+    fn material(&self) -> &Material {
+        &self.material
+    }
+
+    fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
+    }
+
+    fn debug(&self) -> String {
+        format!("{:?}", self)
+    }
+
+    fn id(&self) -> usize {
+        self.id
     }
 }

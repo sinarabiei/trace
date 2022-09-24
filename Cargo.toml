@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 
 [[example]]
-name = "shadow"
-path = "examples/shadow.rs"
+name = "plane"
+path = "examples/plane.rs"
