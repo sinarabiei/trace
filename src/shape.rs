@@ -1,6 +1,6 @@
 use crate::intersection::Intersection;
+use crate::mat4::Mat4;
 use crate::material::Material;
-use crate::matrix::Mat4;
 use crate::point::Point;
 use crate::ray::Ray;
 use crate::vector::Vector;
