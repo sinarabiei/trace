@@ -16,50 +16,18 @@ impl Canvas {
         Self {
             width,
             height,
-            array: vec![color![0, 0, 0]; width * height],
+            array: vec![
+                Color {
+                    red: 0.0,
+                    green: 0.0,
+                    blue: 0.0
+                };
+                width * height
+            ],
         }
     }
 
     /// Returns a PPM-formatted string.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use trace::prelude::*;
-    /// let mut canvas = Canvas::new(5, 3);
-    /// canvas[(0, 0)] = color![1.5, 0, 0];
-    /// canvas[(2, 1)] = color![0, 0.5, 0];
-    /// canvas[(4, 2)] = color![-0.5, 0, 1];
-    /// let ppm = format!(
-    ///               "{}\n{}\n{}\n{}\n{}\n{}\n",
-    ///               "P3",
-    ///               "5 3",
-    ///               "255",
-    ///               "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
-    ///               "0 0 0 0 0 0 0 128 0 0 0 0 0 0 0",
-    ///               "0 0 0 0 0 0 0 0 0 0 0 0 0 0 255"
-    ///           );
-    /// assert_eq!(canvas.to_ppm(), ppm);
-    ///
-    /// // No line in a PPM file should be more than 70 characters long.
-    /// let mut canvas = Canvas::new(10, 2);
-    /// for width in 0..canvas.width {
-    ///     for height in 0..canvas.height {
-    ///         canvas[(width, height)] = color![1, 0.8, 0.6];
-    ///     }
-    /// }
-    /// let ppm = format!(
-    ///               "{}\n{}\n{}\n{}\n{}\n{}\n{}\n",
-    ///               "P3",
-    ///               "10 2",
-    ///               "255",
-    ///               "255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204",
-    ///               "153 255 204 153 255 204 153 255 204 153 255 204 153",
-    ///               "255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204",
-    ///               "153 255 204 153 255 204 153 255 204 153 255 204 153"
-    ///           );
-    /// assert_eq!(canvas.to_ppm(), ppm);
-    /// ```
     pub fn to_ppm(&self) -> String {
         let mut ppm = String::new();
         ppm.push_str("P3\n");
@@ -119,15 +87,6 @@ impl Index<(usize, usize)> for Canvas {
     }
 }
 
-/// # Examples
-///
-/// ```
-/// # use trace::prelude::*;
-/// let mut canvas = Canvas::new(10, 20);
-/// let red = color![1, 0, 0];
-/// canvas[(2, 3)] = red;
-/// assert_eq!(canvas[(2, 3)], red);
-/// ```
 impl IndexMut<(usize, usize)> for Canvas {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         if index.0 < self.width && index.1 < self.height {
@@ -137,5 +96,48 @@ impl IndexMut<(usize, usize)> for Canvas {
             "index out of bounds: canvas size is {} by {}, index is [({}, {})]",
             self.width, self.height, index.0, index.1
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::color;
+
+    #[test]
+    fn test_to_ppm() {
+        let mut canvas = Canvas::new(5, 3);
+        canvas[(0, 0)] = color![1.5, 0, 0];
+        canvas[(2, 1)] = color![0, 0.5, 0];
+        canvas[(4, 2)] = color![-0.5, 0, 1];
+        let ppm = format!(
+            "{}\n{}\n{}\n{}\n{}\n{}\n",
+            "P3",
+            "5 3",
+            "255",
+            "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0",
+            "0 0 0 0 0 0 0 128 0 0 0 0 0 0 0",
+            "0 0 0 0 0 0 0 0 0 0 0 0 0 0 255"
+        );
+        assert_eq!(canvas.to_ppm(), ppm);
+
+        // No line in a PPM file should be more than 70 characters long.
+        let mut canvas = Canvas::new(10, 2);
+        for width in 0..canvas.width {
+            for height in 0..canvas.height {
+                canvas[(width, height)] = color![1, 0.8, 0.6];
+            }
+        }
+        let ppm = format!(
+            "{}\n{}\n{}\n{}\n{}\n{}\n{}\n",
+            "P3",
+            "10 2",
+            "255",
+            "255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204",
+            "153 255 204 153 255 204 153 255 204 153 255 204 153",
+            "255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204",
+            "153 255 204 153 255 204 153 255 204 153 255 204 153"
+        );
+        assert_eq!(canvas.to_ppm(), ppm);
     }
 }

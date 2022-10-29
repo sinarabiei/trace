@@ -1,4 +1,5 @@
-use crate::prelude::{is_equal, Vector};
+use crate::prelude::is_equal;
+use crate::vector::Vector;
 use std::ops::{Add, Sub};
 
 /// Point in 3D space
@@ -48,24 +49,12 @@ impl Point {
     }
 }
 
-/// # Examples
-///
-/// ```
-/// # use trace::prelude::*;
-/// assert_eq!(point![1, 2, 3], Point {x: 1.0, y: 2.0, z: 3.0});
-/// ```
 impl PartialEq for Point {
     fn eq(&self, other: &Self) -> bool {
         is_equal(self.x, other.x) && is_equal(self.y, other.y) && is_equal(self.z, other.z)
     }
 }
 
-/// # Examples
-///
-/// ```
-/// # use trace::prelude::*;
-/// assert_eq!(point![1, 2.4, 5.0] + vector![6.0, 9.01, 0.7], point![7, 11.41, 5.7]);
-/// ```
 impl Add<Vector> for Point {
     type Output = Self;
 
@@ -78,12 +67,6 @@ impl Add<Vector> for Point {
     }
 }
 
-/// # Examples
-///
-/// ```
-/// # use trace::prelude::*;
-/// assert_eq!(point![3, 2, 1] - point![5, 6, 7], vector![-2, -4, -6]);
-/// ```
 impl Sub for Point {
     type Output = Vector;
 
@@ -96,12 +79,6 @@ impl Sub for Point {
     }
 }
 
-/// # Examples
-///
-/// ```
-/// # use trace::prelude::*;
-/// assert_eq!(point![3, 2, 1] - vector![5, 6, 7], point![-2, -4, -6]);
-/// ```
 impl Sub<Vector> for Point {
     type Output = Self;
 
@@ -115,4 +92,38 @@ impl Sub<Vector> for Point {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+    use crate::vector;
+    use crate::{point, point::Point};
+
+    #[test]
+    fn test_eq() {
+        assert_eq!(
+            point![1, 2, 3],
+            Point {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0
+            }
+        );
+    }
+
+    #[test]
+    fn test_add_vector() {
+        assert_eq!(
+            point![1, 2.4, 5.0] + vector![6.0, 9.01, 0.7],
+            point![7, 11.41, 5.7]
+        );
+    }
+
+    #[test]
+    fn test_sub() {
+        assert_eq!(point![3, 2, 1] - point![5, 6, 7], vector![-2, -4, -6]);
+    }
+
+    #[test]
+    fn test_sub_vector() {
+        assert_eq!(point![3, 2, 1] - vector![5, 6, 7], point![-2, -4, -6]);
+    }
+}
