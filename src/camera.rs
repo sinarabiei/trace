@@ -1,5 +1,5 @@
 use crate::canvas::Canvas;
-use crate::mat4::Mat4;
+use crate::matrix::Mat4;
 use crate::point::Point;
 use crate::ray::Ray;
 use crate::world::World;
@@ -59,6 +59,31 @@ impl Camera {
         }
     }
 
+    /// # Examples
+    ///
+    /// ```
+    /// # use trace::prelude::*;
+    /// # use std::f64::consts::PI;
+    /// # use std::f64::consts::SQRT_2;
+    /// // Constructing a ray through the center of the canvas
+    /// let camera = Camera::new(201, 101, PI / 2.0);
+    /// let ray = camera.ray_for_pixel(100, 50);
+    /// assert_eq!(ray.origin, point![0, 0, 0]);
+    /// assert_eq!(ray.direction, vector![0, 0, -1]);
+    ///
+    /// // Constructing a ray through a corner of the canvas
+    /// let camera = Camera::new(201, 101, PI / 2.0);
+    /// let ray = camera.ray_for_pixel(0, 0);
+    /// assert_eq!(ray.origin, point![0, 0, 0]);
+    /// assert_eq!(ray.direction, vector![0.66519, 0.33259, -0.66851]);
+    ///
+    /// // Constructing a ray when the camera is transformed
+    /// let mut camera = Camera::new(201, 101, PI / 2.0);
+    /// camera.transform = Mat4::identity().translate(0, -2, 5).rotate_y(PI / 4.0);
+    /// let ray = camera.ray_for_pixel(100, 50);
+    /// assert_eq!(ray.origin, point![0, 2, -5]);
+    /// assert_eq!(ray.direction, vector![SQRT_2 / 2.0, 0, -SQRT_2 / 2.0]);
+    /// ```
     pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray {
         let x_offset = (x as f64 + 0.5) * self.pixel_size;
         let y_offset = (y as f64 + 0.5) * self.pixel_size;
@@ -85,15 +110,15 @@ impl Camera {
     /// ```
     /// # use trace::prelude::*;
     /// # use std::f64::consts::PI;
-    /// // Rendering a world with a camera
-    /// let world = World::default();
-    /// let mut camera = Camera::new(11, 11, PI / 2.0);
-    /// let from = point![0, 0, -5];
-    /// let to = point![0, 0, 0];
-    /// let up = vector![0, 1, 0];
-    /// camera.transform = Mat4::identity().view_transform(from, to, up);
-    /// let image = camera.render(&world);
-    /// assert_eq!(image[(5, 5)], color![0.38066, 0.47583, 0.2855]);
+    ///     // Rendering a world with a camera
+    ///     let world = World::new();
+    ///     let mut camera = Camera::new(11, 11, PI / 2.0);
+    ///     let from = point![0, 0, -5];
+    ///     let to = point![0, 0, 0];
+    ///     let up = vector![0, 1, 0];
+    ///     camera.transform = Mat4::identity().view_transform(from, to, up);
+    ///     let image = camera.render(&world);
+    ///     assert_eq!(image[(5, 5)], color![0.38066, 0.47583, 0.2855]);
     /// ```
     pub fn render(&self, world: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
@@ -105,36 +130,5 @@ impl Camera {
             }
         }
         image
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::point;
-    use crate::{vector, vector::Vector};
-    use std::f64::consts::PI;
-    use std::f64::consts::SQRT_2;
-
-    #[test]
-    fn test_ray_for_pixel() {
-        // Constructing a ray through the center of the canvas
-        let camera = Camera::new(201, 101, PI / 2.0);
-        let ray = camera.ray_for_pixel(100, 50);
-        assert_eq!(ray.origin, point![0, 0, 0]);
-        assert_eq!(ray.direction, vector![0, 0, -1]);
-
-        // Constructing a ray through a corner of the canvas
-        let camera = Camera::new(201, 101, PI / 2.0);
-        let ray = camera.ray_for_pixel(0, 0);
-        assert_eq!(ray.origin, point![0, 0, 0]);
-        assert_eq!(ray.direction, vector![0.66519, 0.33259, -0.66851]);
-
-        // Constructing a ray when the camera is transformed
-        let mut camera = Camera::new(201, 101, PI / 2.0);
-        camera.transform = Mat4::identity().translate(0, -2, 5).rotate_y(PI / 4.0);
-        let ray = camera.ray_for_pixel(100, 50);
-        assert_eq!(ray.origin, point![0, 2, -5]);
-        assert_eq!(ray.direction, vector![SQRT_2 / 2.0, 0, -SQRT_2 / 2.0]);
     }
 }

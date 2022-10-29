@@ -1,5 +1,5 @@
 # Trace
 
-## Pattern
+## Plane
 
-![Pattern](assets/pattern.png "Pattern")
+![Plane](assets/plane.png "Plane")

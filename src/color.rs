@@ -8,19 +8,6 @@ pub struct Color {
     pub blue: f64,
 }
 
-impl Color {
-    pub const BLACK: Color = Color {
-        red: 0.0,
-        green: 0.0,
-        blue: 0.0,
-    };
-    pub const WHITE: Color = Color {
-        red: 1.0,
-        green: 1.0,
-        blue: 1.0,
-    };
-}
-
 /// Creates a Color containing the arguments.
 ///
 /// # Examples
@@ -53,6 +40,12 @@ impl PartialEq for Color {
     }
 }
 
+/// # Examples
+///
+/// ```
+/// # use trace::prelude::*;
+/// assert_eq!(color![0.9, 0.6, 0.75] + color![0.7, 0.1, 0.25], color![1.6, 0.7, 1.0]);
+/// ```
 impl Add for Color {
     type Output = Self;
 
@@ -65,6 +58,12 @@ impl Add for Color {
     }
 }
 
+/// # Examples
+///
+/// ```
+/// # use trace::prelude::*;
+/// assert_eq!(color![0.9, 0.6, 0.75] - color![0.7, 0.1, 0.25], color![0.2, 0.5, 0.5]);
+/// ```
 impl Sub for Color {
     type Output = Self;
 
@@ -78,6 +77,13 @@ impl Sub for Color {
 }
 
 /// Hadamard product
+///
+/// # Examples
+///
+/// ```
+/// # use trace::prelude::*;
+/// assert_eq!(color![1, 0.2, 0.4] * color![0.9, 1, 0.1], color![0.9, 0.2, 0.04]);
+/// ```
 impl Mul for Color {
     type Output = Self;
 
@@ -90,6 +96,12 @@ impl Mul for Color {
     }
 }
 
+/// # Examples
+///
+/// ```
+/// # use trace::prelude::*;
+/// assert_eq!(color![0.2, 0.3, 0.4] * 2, color![0.4, 0.6, 0.8]);
+/// ```
 impl<T> Mul<T> for Color
 where
     f64: From<T>,
@@ -107,35 +119,4 @@ where
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_add() {
-        assert_eq!(
-            color![0.9, 0.6, 0.75] + color![0.7, 0.1, 0.25],
-            color![1.6, 0.7, 1.0]
-        );
-    }
-
-    #[test]
-    fn test_sub() {
-        assert_eq!(
-            color![0.9, 0.6, 0.75] - color![0.7, 0.1, 0.25],
-            color![0.2, 0.5, 0.5]
-        );
-    }
-
-    #[test]
-    fn test_mul_hadamard() {
-        assert_eq!(
-            color![1, 0.2, 0.4] * color![0.9, 1, 0.1],
-            color![0.9, 0.2, 0.04]
-        );
-    }
-
-    #[test]
-    fn test_mul() {
-        assert_eq!(color![0.2, 0.3, 0.4] * 2, color![0.4, 0.6, 0.8]);
-    }
-}
+mod tests {}
